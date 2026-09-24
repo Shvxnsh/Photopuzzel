@@ -19,9 +19,9 @@
     </header>
 
     <section class="help" id="help">
-      <p class="eyebrow">Simple camera</p>
+      <p class="eyebrow">Nikon S3300 mood</p>
       <h1>Make a moment.</h1>
-      <p>Allow camera access, then pinch your thumb and index finger to take a photo.</p>
+      <p>Allow camera access, then use both hands to make a frame. Hold it for three seconds.</p>
       <button id="startButton" class="action" type="button">Start camera</button>
       <label class="upload">or choose a photo<input id="fileInput" type="file" accept="image/*"></label>
       <p id="error" class="error" role="alert"></p>
@@ -32,15 +32,14 @@
       <div id="historyList" class="history-list"><p class="empty-history">Photos you capture will appear here.</p></div>
     </aside>
 
+    <div id="countdown" class="countdown" hidden>3</div>
     <div class="bottom-bar">
-      <span id="gestureStatus">Pinch thumb + index to capture</span>
+      <span id="gestureStatus">Use both hands to make a frame</span>
       <button id="captureButton" class="capture" type="button" disabled>Capture</button>
     </div>
-
     <div id="toast" class="toast" role="status" aria-live="polite"></div>
   </main>
   <script src="https://cdn.jsdelivr.net/npm/@mediapipe/hands/hands.js" crossorigin="anonymous"></script>
-  <script src="https://cdn.jsdelivr.net/npm/@mediapipe/camera_utils/camera_utils.js" crossorigin="anonymous"></script>
   <script src="script.js"></script>
 </body>
 </html>

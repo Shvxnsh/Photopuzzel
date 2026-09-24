@@ -11,14 +11,17 @@ const errorText = $('#error');
 const historyList = $('#historyList');
 const statusText = $('#cameraStatus');
 const gestureStatus = $('#gestureStatus');
+const countdown = $('#countdown');
 const toast = $('#toast');
 
 let stream = null;
 let hands = null;
 let handLoop = 0;
 let starting = false;
-let lastGestureCapture = 0;
 let history = [];
+let frameStartedAt = 0;
+let captureLockedUntil = 0;
+let countdownTimer = 0;
 
 function showError(message) {
   errorText.textContent = message;
@@ -28,8 +31,19 @@ function showError(message) {
 function showToast(message) {
   toast.textContent = message;
   toast.classList.add('visible');
-  window.clearTimeout(showToast.timer);
-  showToast.timer = window.setTimeout(() => toast.classList.remove('visible'), 2200);
+  clearTimeout(showToast.timer);
+  showToast.timer = setTimeout(() => toast.classList.remove('visible'), 2200);
+}
+
+function distance(a, b) {
+  return Math.hypot(a.x - b.x, a.y - b.y);
+}
+
+// A frame is made when both hands form a thumb/index pinch. This is stable,
+// easy to understand, and avoids taking photos from a single accidental hand.
+function isFrameHand(points) {
+  if (!points || !points[4] || !points[8]) return false;
+  return distance(points[4], points[8]) < 0.12;
 }
 
 function drawHands(results) {
@@ -37,33 +51,49 @@ function drawHands(results) {
   handCanvas.width = video.videoWidth || 640;
   handCanvas.height = video.videoHeight || 480;
   handContext.clearRect(0, 0, handCanvas.width, handCanvas.height);
+
   landmarks.forEach((points) => {
     if (window.drawConnectors) window.drawConnectors(handContext, points, window.HAND_CONNECTIONS, { color: '#b8e5d4', lineWidth: 4 });
     if (window.drawLandmarks) window.drawLandmarks(handContext, points, { color: '#fff', lineWidth: 1, radius: 4 });
   });
-  if (!landmarks.length) {
-    gestureStatus.textContent = 'Show one hand, then pinch thumb + index';
+
+  const frameReady = landmarks.length >= 2 && landmarks.slice(0, 2).every(isFrameHand);
+  if (!frameReady) {
+    frameStartedAt = 0;
+    countdown.hidden = true;
+    clearInterval(countdownTimer);
+    if (landmarks.length < 2) gestureStatus.textContent = 'Show both hands and pinch thumb + index';
+    else gestureStatus.textContent = 'Pinch thumb + index on both hands';
     return;
   }
-  gestureStatus.textContent = isPinch(landmarks[0]) ? 'Pinch detected — capturing…' : 'Pinch thumb + index to capture';
-  if (isPinch(landmarks[0]) && Date.now() - lastGestureCapture > 1800) {
-    lastGestureCapture = Date.now();
+
+  if (Date.now() < captureLockedUntil) return;
+  if (!frameStartedAt) frameStartedAt = Date.now();
+
+  const elapsed = Date.now() - frameStartedAt;
+  const remaining = Math.max(0, 3 - Math.floor(elapsed / 1000));
+  countdown.hidden = false;
+  countdown.textContent = remaining || '📸';
+  gestureStatus.textContent = `Frame held — photo in ${remaining || 0}`;
+
+  if (elapsed >= 2800) {
+    captureLockedUntil = Date.now() + 1800;
+    frameStartedAt = 0;
+    countdown.hidden = true;
     capturePhoto();
   }
 }
 
-function distance(a, b) { return Math.hypot(a.x - b.x, a.y - b.y); }
-function isPinch(points) { return points && points[4] && points[8] && distance(points[4], points[8]) < 0.065; }
-
 async function startHandTracking() {
   if (!window.Hands || hands) return;
   hands = new window.Hands({ locateFile: (file) => `https://cdn.jsdelivr.net/npm/@mediapipe/hands/${file}` });
-  hands.setOptions({ maxNumHands: 1, modelComplexity: 0, minDetectionConfidence: 0.65, minTrackingConfidence: 0.6 });
+  hands.setOptions({ maxNumHands: 2, modelComplexity: 0, minDetectionConfidence: 0.65, minTrackingConfidence: 0.6 });
   hands.onResults(drawHands);
+
   const loop = async () => {
     if (!stream || !hands) return;
     if (video.readyState >= 2) {
-      try { await hands.send({ image: video }); } catch (error) { /* keep camera usable */ }
+      try { await hands.send({ image: video }); } catch (error) { /* camera remains usable */ }
     }
     handLoop = requestAnimationFrame(loop);
   };
@@ -75,10 +105,14 @@ async function startCamera() {
   starting = true;
   errorText.textContent = '';
   statusText.textContent = 'Requesting permission…';
+
   try {
     if (!window.isSecureContext) throw new Error('Open this website over HTTPS. Camera access is blocked on plain HTTP.');
     if (!navigator.mediaDevices?.getUserMedia) throw new Error('This Edge browser does not support camera access.');
-    stream = await navigator.mediaDevices.getUserMedia({ video: { facingMode: 'user', width: { ideal: 1280 }, height: { ideal: 720 } }, audio: false });
+    stream = await navigator.mediaDevices.getUserMedia({
+      video: { facingMode: 'user', width: { ideal: 1280 }, height: { ideal: 720 } },
+      audio: false
+    });
     video.srcObject = stream;
     await video.play();
     help.hidden = true;
@@ -99,12 +133,37 @@ async function startCamera() {
   }
 }
 
+function applyVintageLook(context, width, height) {
+  context.save();
+  context.globalCompositeOperation = 'source-over';
+  context.fillStyle = 'rgba(191, 143, 82, 0.10)';
+  context.fillRect(0, 0, width, height);
+  const vignette = context.createRadialGradient(width / 2, height / 2, height * 0.2, width / 2, height / 2, height * 0.75);
+  vignette.addColorStop(0, 'rgba(255, 240, 205, 0)');
+  vignette.addColorStop(1, 'rgba(35, 22, 10, 0.38)');
+  context.fillStyle = vignette;
+  context.fillRect(0, 0, width, height);
+  context.globalAlpha = 0.06;
+  for (let i = 0; i < width * height / 180; i += 1) {
+    context.fillStyle = Math.random() > 0.5 ? '#fff4d4' : '#24160d';
+    context.fillRect(Math.random() * width, Math.random() * height, 1, 1);
+  }
+  context.restore();
+}
+
 function capturePhoto() {
   if (!stream || !video.videoWidth) return;
   const canvas = document.createElement('canvas');
   canvas.width = video.videoWidth;
   canvas.height = video.videoHeight;
-  canvas.getContext('2d').drawImage(video, 0, 0, canvas.width, canvas.height);
+  const context = canvas.getContext('2d');
+  context.filter = 'sepia(0.32) saturate(0.78) contrast(1.12) brightness(0.96)';
+  context.translate(canvas.width, 0);
+  context.scale(-1, 1);
+  context.drawImage(video, 0, 0, canvas.width, canvas.height);
+  context.setTransform(1, 0, 0, 1, 0, 0);
+  context.filter = 'none';
+  applyVintageLook(context, canvas.width, canvas.height);
   addToHistory(canvas.toDataURL('image/jpeg', 0.9));
 }
 
@@ -113,7 +172,7 @@ function addToHistory(source) {
   history = history.slice(0, 30);
   localStorage.setItem('photopuzzel-history', JSON.stringify(history));
   renderHistory();
-  showToast('Photo captured');
+  showToast('Vintage photo captured');
 }
 
 function renderHistory() {
@@ -137,7 +196,8 @@ function renderHistory() {
 }
 
 function stopCamera() {
-  if (handLoop) cancelAnimationFrame(handLoop);
+  cancelAnimationFrame(handLoop);
+  clearInterval(countdownTimer);
   if (hands) { hands.close(); hands = null; }
   if (stream) stream.getTracks().forEach((track) => track.stop());
   stream = null;
@@ -147,7 +207,7 @@ function stopCamera() {
 }
 
 startButton.addEventListener('click', startCamera);
-captureButton.addEventListener('click', () => { lastGestureCapture = Date.now(); capturePhoto(); });
+captureButton.addEventListener('click', () => { captureLockedUntil = Date.now() + 1800; capturePhoto(); });
 fileInput.addEventListener('change', (event) => {
   const file = event.target.files[0];
   if (!file) return;
