@@ -3,7 +3,7 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1">
-  <meta name="theme-color" content="#eef4f1">
+  <meta name="theme-color" content="#f5f7f4">
   <title>Photopuzzel</title>
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
@@ -11,16 +11,56 @@
   <link rel="stylesheet" href="style.css">
 </head>
 <body>
-  <main class="shell">
-    <header><a class="brand" href=".">✳ photopuzzel</a><button id="reset" class="link-button">new moment ↗</button></header>
-    <section class="hero"><div><p class="eyebrow">01 — be here now</p><h1>Take a picture.<br><em>Make it play.</em></h1></div><p>Take a photo, solve the moment, and keep it as a photobooth strip.</p></section>
-    <section class="workspace">
-      <aside class="panel controls"><div class="heading"><span>01</span><h2>Make the moment</h2></div><button id="openCamera" class="capture-card">◎ <span><b>Open camera</b><small>works with manual capture</small></span></button><label class="upload">or choose a picture<input id="fileInput" type="file" accept="image/*"></label><p id="status" class="note">Use HTTPS or localhost for camera access.</p><div class="settings"><label for="size">Puzzle pieces <output id="sizeValue">3 × 3</output></label><input id="size" type="range" min="2" max="4" value="3"></div><button id="shuffle" class="primary">shuffle the picture ↗</button></aside>
-      <section class="panel puzzle-panel"><div class="panel-head"><div><p class="eyebrow">02 — piece it together</p><h2 id="title">Waiting for a picture</h2></div><div class="counter"><b id="placed">0</b> / <span id="total">9</span><small>placed</small></div></div><div class="puzzle-wrap"><div id="puzzle" class="puzzle"></div><div id="win" class="win" hidden>✳ solved!</div></div><div class="puzzle-footer"><span id="puzzleStatus">Open the camera to begin.</span><span>moves <b id="moves">0</b></span></div></section>
-      <aside class="panel strip"><div class="heading"><span>03</span><h2>Your photo strip</h2></div><div class="strip-stage"><canvas id="stripCanvas" width="360" height="640"></canvas><div id="placeholder" class="placeholder">✳<br><small>Solve the puzzle<br>to develop your strip</small></div></div><button id="download" class="secondary" disabled>download strip ↓</button><button id="print" class="link-button" disabled>print the moment</button></aside>
+  <header class="topbar">
+    <a class="brand" href="."><span>✳</span> photopuzzel</a>
+    <button id="resetButton" class="text-button" type="button">new picture ↗</button>
+  </header>
+
+  <main class="page">
+    <section class="intro">
+      <div><p class="eyebrow">A small photo puzzle</p><h1>Make a moment.<br><em>Piece it together.</em></h1></div>
+      <p class="intro-copy">Take a picture with your camera or choose one from your device. Everything stays in your browser.</p>
+    </section>
+
+    <section class="layout">
+      <aside class="card controls">
+        <p class="step">01 / choose a picture</p>
+        <button id="cameraButton" class="button button-primary" type="button">Open camera <span>◎</span></button>
+        <label class="file-button">Choose from device<input id="imageInput" type="file" accept="image/*"></label>
+        <p id="status" class="small-note">Camera works on HTTPS or localhost in Edge.</p>
+        <div class="settings">
+          <label for="gridSize">Puzzle size <output id="gridValue">3 × 3</output></label>
+          <input id="gridSize" type="range" min="2" max="4" value="3">
+        </div>
+        <button id="shuffleButton" class="button button-dark" type="button" disabled>Shuffle ↗</button>
+      </aside>
+
+      <section class="card puzzle-card">
+        <div class="section-head"><div><p class="step">02 / solve it</p><h2 id="puzzleTitle">Waiting for a picture</h2></div><div class="score"><b id="placed">0</b>/<span id="total">9</span><small>placed</small></div></div>
+        <div class="puzzle-wrap"><div id="puzzle" class="puzzle"></div><div id="solvedBadge" class="solved-badge" hidden>✳ solved</div></div>
+        <div class="puzzle-footer"><span id="puzzleStatus">Choose a picture to begin.</span><span>moves <b id="moves">0</b></span></div>
+      </section>
+
+      <aside class="card strip-card">
+        <p class="step">03 / keep it</p><h2>Photo strip</h2>
+        <div class="strip-wrap"><canvas id="stripCanvas" width="360" height="640"></canvas><div id="stripPlaceholder" class="strip-placeholder">✳<small>solve the puzzle<br>to develop your strip</small></div></div>
+        <button id="downloadButton" class="button button-dark" type="button" disabled>Download strip ↓</button>
+        <button id="printButton" class="text-button" type="button" disabled>Print</button>
+      </aside>
     </section>
   </main>
-  <div id="modal" class="modal" hidden><div class="modal-card"><button id="close" class="close" aria-label="Close">×</button><p class="eyebrow">camera mode</p><h2>Make a real memory.</h2><div class="camera-box"><video id="video" autoplay muted playsinline></video><div id="cameraMessage" class="camera-message">Press open camera to begin.</div></div><div class="camera-actions"><button id="capture" class="primary" disabled>capture now ◎</button><button id="retry" class="link-button">retry camera</button></div><p id="cameraError" class="error"></p></div></div>
+
+  <div id="cameraModal" class="modal" hidden>
+    <section class="camera-dialog" role="dialog" aria-modal="true" aria-labelledby="cameraTitle">
+      <button id="closeCamera" class="close-button" type="button" aria-label="Close camera">×</button>
+      <p class="eyebrow">Camera</p><h2 id="cameraTitle">Take your picture</h2>
+      <div class="camera-preview"><video id="cameraVideo" autoplay muted playsinline></video><div id="cameraMessage" class="camera-message">Press start camera.</div></div>
+      <p id="cameraError" class="camera-error" role="alert"></p>
+      <div class="camera-actions"><button id="startCamera" class="button button-primary" type="button">Start camera</button><button id="captureButton" class="button button-dark" type="button" disabled>Take picture</button></div>
+      <p class="small-note">If Edge asks for permission, choose Allow. Camera access requires HTTPS or localhost.</p>
+    </section>
+  </div>
+
   <script src="script.js"></script>
 </body>
 </html>
