@@ -2,43 +2,62 @@
 <html lang="en">
 <head>
   <meta charset="UTF-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1">
-  <meta name="theme-color" content="#101615">
-  <title>Photopuzzel Camera</title>
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <meta name="theme-color" content="#171613">
+  <title>Photopuzzel</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=DM+Mono:wght@400;500&family=Fraunces:opsz,wght@9..144,500;9..144,700&family=Space+Grotesk:wght@400;500;600;700&display=swap" rel="stylesheet">
   <link rel="stylesheet" href="style.css">
 </head>
 <body>
   <main class="camera-app">
-    <video id="cameraVideo" autoplay muted playsinline></video>
-    <canvas id="handCanvas" aria-hidden="true"></canvas>
-    <div class="shade"></div>
-
-    <header class="topbar">
-      <a class="brand" href=".">✳ photopuzzel</a>
-      <span id="cameraStatus">Camera is off</span>
-    </header>
-
-    <section class="help" id="help">
-      <p class="eyebrow">Nikon S3300 mood</p>
-      <h1>Make a moment.</h1>
-      <p>Allow camera access, then use both hands to make a frame. Hold it for three seconds.</p>
-      <button id="startButton" class="action" type="button">Start camera</button>
-      <label class="upload">or choose a photo<input id="fileInput" type="file" accept="image/*"></label>
-      <p id="error" class="error" role="alert"></p>
-    </section>
-
-    <aside class="history" aria-label="Clicked photos history">
-      <div class="history-head"><div><p class="eyebrow">Your moments</p><h2>Photo history</h2></div><button id="clearButton" class="clear" type="button">Clear</button></div>
-      <div id="historyList" class="history-list"><p class="empty-history">Photos you capture will appear here.</p></div>
-    </aside>
-
-    <div id="countdown" class="countdown" hidden>3</div>
-    <div class="bottom-bar">
-      <span id="gestureStatus">Use both hands to make a frame</span>
-      <button id="captureButton" class="capture" type="button" disabled>Capture</button>
+    <div class="browser-bar">
+      <div class="browser-left">
+        <span>←</span>
+        <span>→</span>
+      </div>
+      <div class="browser-address">127.0.0.1:5500</div>
+      <div class="browser-right">
+        <span>☆</span>
+        <span>⚑</span>
+        <span>⋮</span>
+      </div>
     </div>
-    <div id="toast" class="toast" role="status" aria-live="polite"></div>
+
+    <div class="workspace">
+      <section class="camera-panel">
+        <div class="panel-head">
+          <span class="panel-label">PUZZLE • CAM HAND-FRAME CAPTURE</span>
+          <div class="capture-badge">CAPTURAR EN <span id="captureValue">3</span></div>
+        </div>
+
+        <div class="stage-wrap">
+          <div class="camera-frame">
+            <video id="cameraVideo" autoplay muted playsinline></video>
+            <canvas id="handCanvas" aria-hidden="true"></canvas>
+            <div id="countdown" class="countdown" hidden>3</div>
+          </div>
+        </div>
+
+        <div class="stage-footer">
+          <span id="gestureText">pinch hands manos • conjugar y capturar (3s)</span>
+          <button id="captureButton" class="capture-btn" type="button">CAPTURAR</button>
+        </div>
+      </section>
+
+      <aside class="history-pane">
+        <div class="history-header">
+          <span class="history-label">TIRA</span>
+          <span class="history-count">0 / 0</span>
+        </div>
+        <div id="historyList" class="history-list">
+          <p class="empty-state">Tus recuerdos aparecerán aquí.</p>
+        </div>
+      </aside>
+    </div>
   </main>
+
   <script src="https://cdn.jsdelivr.net/npm/@mediapipe/hands/hands.js" crossorigin="anonymous"></script>
   <script src="script.js"></script>
 </body>
