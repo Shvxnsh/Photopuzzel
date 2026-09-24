@@ -52,9 +52,7 @@ function renderPuzzle(shouldShuffle = true) {
   }
 
   tiles = Array.from({ length: total }, (_, index) => index);
-  if (shouldShuffle) {
-    do shuffle(tiles); while (tiles.every((piece, index) => piece === index));
-  }
+  if (shouldShuffle) do shuffle(tiles); while (tiles.every((piece, index) => piece === index));
   statusText.textContent = 'Click two pieces to swap them.';
   drawTiles();
   drawStrip(false);
@@ -168,26 +166,69 @@ printButton.addEventListener('click', () => {
   printWindow.document.close();
 });
 
-function showCameraError(message) {
+function setCameraMessage(message) {
   $('#cameraNote').textContent = message;
   takePhotoButton.disabled = true;
 }
 
+function waitForVideo() {
+  return new Promise((resolve, reject) => {
+    if (video.readyState >= HTMLMediaElement.HAVE_METADATA && video.videoWidth > 0) {
+      resolve();
+      return;
+    }
+    const timeout = window.setTimeout(() => reject(new Error('The camera did not return a video feed.')), 10000);
+    video.addEventListener('loadedmetadata', () => {
+      window.clearTimeout(timeout);
+      resolve();
+    }, { once: true });
+  });
+}
+
+async function openCamera() {
+  if (!window.isSecureContext) throw new Error('Open the Vercel URL using HTTPS, not HTTP.');
+  if (!navigator.mediaDevices || !navigator.mediaDevices.getUserMedia) {
+    throw new Error('This browser does not provide camera access. Try Chrome, Edge, Safari, or Firefox.');
+  }
+
+  // Some laptop webcams reject facingMode. Start with the most compatible request.
+  const requests = [
+    { video: { facingMode: { ideal: 'user' } }, audio: false },
+    { video: true, audio: false }
+  ];
+  let lastError;
+  for (const constraints of requests) {
+    try {
+      return await navigator.mediaDevices.getUserMedia(constraints);
+    } catch (error) {
+      lastError = error;
+      if (error.name === 'NotAllowedError' || error.name === 'SecurityError') break;
+    }
+  }
+  throw lastError || new Error('Unable to access a camera.');
+}
+
 $('#cameraButton').addEventListener('click', async () => {
   modal.hidden = false;
-  $('#cameraNote').textContent = '';
+  $('#cameraNote').textContent = 'Allow camera access when your browser asks.';
   takePhotoButton.disabled = true;
   try {
-    if (!navigator.mediaDevices?.getUserMedia) throw new Error('Camera needs HTTPS or localhost.');
-    stream = await navigator.mediaDevices.getUserMedia({ video: { facingMode: 'user' }, audio: false });
+    stream = await openCamera();
+    video.muted = true;
+    video.playsInline = true;
     video.srcObject = stream;
     await video.play();
-    if (video.readyState < HTMLMediaElement.HAVE_METADATA) {
-      await new Promise((resolve) => video.addEventListener('loadedmetadata', resolve, { once: true }));
-    }
+    await waitForVideo();
     takePhotoButton.disabled = false;
+    $('#cameraNote').textContent = 'Camera ready.';
   } catch (error) {
-    showCameraError(`${error.message} Please allow camera access and try again.`);
+    const messages = {
+      NotAllowedError: 'Camera permission was blocked. Click the camera icon in the address bar, allow access, then reload.',
+      NotFoundError: 'No camera was found. Connect a webcam and try again.',
+      NotReadableError: 'The camera is being used by another app. Close it and try again.',
+      OverconstrainedError: 'This camera does not support the requested mode. Try again.'
+    };
+    setCameraMessage(messages[error.name] || `${error.message} Make sure this is the HTTPS Vercel URL.`);
   }
 });
 
@@ -203,7 +244,7 @@ function closeCamera() {
 $('#closeCamera').addEventListener('click', closeCamera);
 $('#takePhoto').addEventListener('click', () => {
   if (!video.videoWidth || !video.videoHeight) {
-    showCameraError('Camera is still starting. Try again in a moment.');
+    setCameraMessage('Camera is still starting. Try again in a moment.');
     return;
   }
   const canvas = document.createElement('canvas');
