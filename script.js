@@ -14,6 +14,7 @@ const downloadButton = $('#downloadButton');
 const printButton = $('#printButton');
 const modal = $('#cameraModal');
 const video = $('#cameraVideo');
+const takePhotoButton = $('#takePhoto');
 
 let imageSrc = null;
 let selected = null;
@@ -115,13 +116,13 @@ function setImage(src) {
 function drawStrip(show) {
   const context = stripCanvas.getContext('2d');
   const width = stripCanvas.width;
-  context.fillStyle = '#fffaf3';
+  context.fillStyle = '#f8fbf9';
   context.fillRect(0, 0, width, stripCanvas.height);
   context.textAlign = 'center';
-  context.fillStyle = '#211f1c';
+  context.fillStyle = '#263432';
   context.font = '500 24px Fraunces';
   context.fillText('photopuzzel', width / 2, 34);
-  context.fillStyle = '#8b8074';
+  context.fillStyle = '#71817c';
   context.font = '11px DM Mono';
   context.fillText('A REAL MOMENT / 2024', width / 2, 54);
   placeholder.hidden = show;
@@ -133,13 +134,13 @@ function drawStrip(show) {
     for (let index = 0; index < 3; index += 1) {
       const y = 72 + index * 160;
       context.drawImage(image, 25, y, 310, 145);
-      context.strokeStyle = '#d9cfc1';
+      context.strokeStyle = '#cbd9d4';
       context.strokeRect(25, y, 310, 145);
     }
-    context.fillStyle = '#ff6848';
+    context.fillStyle = '#4d766f';
     context.font = '24px Fraunces';
     context.fillText(show ? '✳ solved it ✳' : 'your next adventure', width / 2, 570);
-    context.fillStyle = '#8b8074';
+    context.fillStyle = '#71817c';
     context.font = '10px DM Mono';
     context.fillText('KEEP THIS ONE', width / 2, 602);
   };
@@ -167,15 +168,26 @@ printButton.addEventListener('click', () => {
   printWindow.document.close();
 });
 
+function showCameraError(message) {
+  $('#cameraNote').textContent = message;
+  takePhotoButton.disabled = true;
+}
+
 $('#cameraButton').addEventListener('click', async () => {
   modal.hidden = false;
   $('#cameraNote').textContent = '';
+  takePhotoButton.disabled = true;
   try {
     if (!navigator.mediaDevices?.getUserMedia) throw new Error('Camera needs HTTPS or localhost.');
     stream = await navigator.mediaDevices.getUserMedia({ video: { facingMode: 'user' }, audio: false });
     video.srcObject = stream;
+    await video.play();
+    if (video.readyState < HTMLMediaElement.HAVE_METADATA) {
+      await new Promise((resolve) => video.addEventListener('loadedmetadata', resolve, { once: true }));
+    }
+    takePhotoButton.disabled = false;
   } catch (error) {
-    $('#cameraNote').textContent = `${error.message} Please open camera access and try again.`;
+    showCameraError(`${error.message} Please allow camera access and try again.`);
   }
 });
 
@@ -183,13 +195,15 @@ function closeCamera() {
   modal.hidden = true;
   if (stream) stream.getTracks().forEach((track) => track.stop());
   stream = null;
+  video.pause();
   video.srcObject = null;
+  takePhotoButton.disabled = true;
 }
 
 $('#closeCamera').addEventListener('click', closeCamera);
 $('#takePhoto').addEventListener('click', () => {
-  if (!video.videoWidth) {
-    $('#cameraNote').textContent = 'Camera is still starting. Try again in a moment.';
+  if (!video.videoWidth || !video.videoHeight) {
+    showCameraError('Camera is still starting. Try again in a moment.');
     return;
   }
   const canvas = document.createElement('canvas');
