@@ -1,0 +1,71 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <meta name="theme-color" content="#f7f0e6" />
+  <title>Photopuzzel — solve the moment</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=DM+Mono:wght@400;500&family=Fraunces:opsz,wght@9..144,500;9..144,700&family=Space+Grotesk:wght@400;500;600;700&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="style.css" />
+</head>
+<body>
+  <main class="app-shell">
+    <header class="topbar">
+      <a class="brand" href="#top" aria-label="Photopuzzel home"><span class="brand-mark">✳</span> photopuzzel</a>
+      <div class="top-meta"><span class="live-dot"></span> photo booth / puzzle club</div>
+      <button class="text-button" id="resetAll">reset session ↗</button>
+    </header>
+
+    <section class="hero" id="top">
+      <div>
+        <p class="eyebrow">01 — make a memory</p>
+        <h1>Turn a picture<br><em>into play.</em></h1>
+      </div>
+      <p class="hero-copy">Pick a photo, shuffle the moment, then earn your photobooth strip by putting every piece back where it belongs.</p>
+    </section>
+
+    <section class="workspace">
+      <aside class="controls panel">
+        <div class="step-heading"><span>01</span><h2>Choose your picture</h2></div>
+        <div class="source-grid">
+          <label class="source-card" for="photoInput"><span class="source-icon">↑</span><strong>Upload</strong><small>JPG, PNG, WEBP</small></label>
+          <button class="source-card" id="cameraButton"><span class="source-icon">◎</span><strong>Camera</strong><small>take a new snap</small></button>
+        </div>
+        <input id="photoInput" type="file" accept="image/*" hidden />
+        <div class="divider"><span>or try the studio sample</span></div>
+        <div class="sample-row">
+          <button class="sample active" data-sample="0" aria-label="Use sample one"><span class="sample-art art-one"></span></button>
+          <button class="sample" data-sample="1" aria-label="Use sample two"><span class="sample-art art-two"></span></button>
+          <button class="sample" data-sample="2" aria-label="Use sample three"><span class="sample-art art-three"></span></button>
+        </div>
+        <div class="settings">
+          <label for="gridSize">Puzzle pieces <output id="gridValue">3 × 3</output></label>
+          <input id="gridSize" type="range" min="2" max="4" value="3" />
+          <div class="range-labels"><span>easy</span><span>hard</span></div>
+        </div>
+        <button class="primary-button" id="shuffleButton">shuffle the picture <span>↗</span></button>
+        <p class="hint">Tip: click two pieces to swap them. Green edges mean they are in the right place.</p>
+      </aside>
+
+      <section class="puzzle-panel panel">
+        <div class="panel-head"><div><p class="eyebrow">02 — piece it together</p><h2 id="puzzleTitle">Studio sample <span>01</span></h2></div><div class="counter"><b id="placedCount">0</b> / <span id="totalCount">9</span><small>placed</small></div></div>
+        <div class="puzzle-wrap"><div id="puzzle" class="puzzle" aria-label="Clickable photo puzzle"></div><div id="winBadge" class="win-badge" hidden>✳ solved!</div></div>
+        <div class="puzzle-footer"><span id="statusText">Ready when you are.</span><span>moves <b id="moveCount">0</b></span></div>
+      </section>
+
+      <aside class="strip-panel panel">
+        <div class="step-heading"><span>03</span><h2>Your photo strip</h2></div>
+        <div class="strip-stage"><canvas id="stripCanvas" width="360" height="640"></canvas><div class="strip-placeholder" id="stripPlaceholder"><span>✳</span><p>Solve the puzzle<br>to develop your strip</p></div></div>
+        <button class="secondary-button" id="downloadButton" disabled>download photobooth strip ↓</button>
+        <button class="ghost-button" id="printButton" disabled>print the moment</button>
+      </aside>
+    </section>
+
+    <div id="cameraModal" class="modal" hidden><div class="modal-card"><button class="close-button" id="closeCamera">×</button><p class="eyebrow">camera mode</p><h2>Make your next memory.</h2><video id="cameraVideo" autoplay playsinline></video><button class="primary-button" id="takePhoto">take photo <span>◎</span></button><p class="camera-note" id="cameraNote"></p></div></div>
+    <footer><span>photopuzzel © 2024</span><span>made for the little moments</span><span>drag less. play more.</span></footer>
+  </main>
+  <script src="script.js"></script>
+</body>
+</html>
