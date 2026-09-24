@@ -2,112 +2,25 @@
 <html lang="en">
 <head>
   <meta charset="UTF-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
   <meta name="theme-color" content="#eef4f1">
   <title>Photopuzzel</title>
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-  <link href="https://fonts.googleapis.com/css2?family=DM+Mono:wght@400;500&family=Fraunces:opsz,wght@9..144,500;9..144,700&family=Space+Grotesk:wght@400;500;600;700&display=swap" rel="stylesheet">
+  <link href="https://fonts.googleapis.com/css2?family=DM+Mono&family=Fraunces:opsz,wght@9..144,500;9..144,700&family=Space+Grotesk:wght@400;500;600;700&display=swap" rel="stylesheet">
   <link rel="stylesheet" href="style.css">
 </head>
 <body>
-  <main class="app-shell">
-    <header class="topbar">
-      <a class="brand" href="#top" aria-label="Photopuzzel home"><span class="brand-mark">✳</span> photopuzzel</a>
-      <span class="top-meta"><i class="live-dot"></i> two hands / one moment</span>
-      <button class="text-button" id="resetAll" type="button">new moment ↗</button>
-    </header>
-
-    <section class="hero" id="top">
-      <div>
-        <p class="eyebrow">01 — be here now</p>
-        <h1>Take a picture.<br><em>Make it play.</em></h1>
-      </div>
-      <p class="hero-copy">Take a photo here, solve the moment, and keep it as a photobooth strip.</p>
-    </section>
-
+  <main class="shell">
+    <header><a class="brand" href=".">✳ photopuzzel</a><button id="reset" class="link-button">new moment ↗</button></header>
+    <section class="hero"><div><p class="eyebrow">01 — be here now</p><h1>Take a picture.<br><em>Make it play.</em></h1></div><p>Take a photo, solve the moment, and keep it as a photobooth strip.</p></section>
     <section class="workspace">
-      <aside class="controls panel">
-        <div class="step-heading"><span>01</span><h2>Make the moment</h2></div>
-        <button class="capture-card" id="cameraButton" type="button">
-          <span class="source-icon">◎</span>
-          <span><strong>Open camera</strong><small>camera + gesture capture</small></span>
-        </button>
-        <p class="minimal-note">Allow camera access, then raise both hands. You can also capture manually.</p>
-
-        <div class="settings">
-          <label for="gridSize">Puzzle pieces <output id="gridValue">3 × 3</output></label>
-          <input id="gridSize" type="range" min="2" max="4" value="3">
-          <div class="range-labels"><span>easy</span><span>hard</span></div>
-        </div>
-
-        <button class="primary-button" id="shuffleButton" type="button">shuffle the picture <span>↗</span></button>
-        <p class="hint">Click two pieces to swap them.</p>
-      </aside>
-
-      <section class="puzzle-panel panel">
-        <div class="panel-head">
-          <div>
-            <p class="eyebrow">02 — piece it together</p>
-            <h2 id="puzzleTitle">Waiting for a picture</h2>
-          </div>
-          <div class="counter"><b id="placedCount">0</b> / <span id="totalCount">9</span><small>placed</small></div>
-        </div>
-        <div class="puzzle-wrap">
-          <div id="puzzle" class="puzzle" aria-label="Clickable photo puzzle"></div>
-          <div id="winBadge" class="win-badge" hidden>✳ solved!</div>
-        </div>
-        <div class="puzzle-footer">
-          <span id="statusText">Open the camera to begin.</span>
-          <span>moves <b id="moveCount">0</b></span>
-        </div>
-      </section>
-
-      <aside class="strip-panel panel">
-        <div class="step-heading"><span>03</span><h2>Your photo strip</h2></div>
-        <div class="strip-stage">
-          <canvas id="stripCanvas" width="360" height="640"></canvas>
-          <div class="strip-placeholder" id="stripPlaceholder"><span>✳</span><p>Solve the puzzle<br>to develop your strip</p></div>
-        </div>
-        <button class="secondary-button" id="downloadButton" disabled type="button">download strip ↓</button>
-        <button class="ghost-button" id="printButton" disabled type="button">print the moment</button>
-      </aside>
+      <aside class="panel controls"><div class="heading"><span>01</span><h2>Make the moment</h2></div><button id="openCamera" class="capture-card">◎ <span><b>Open camera</b><small>works with manual capture</small></span></button><label class="upload">or choose a picture<input id="fileInput" type="file" accept="image/*"></label><p id="status" class="note">Use HTTPS or localhost for camera access.</p><div class="settings"><label for="size">Puzzle pieces <output id="sizeValue">3 × 3</output></label><input id="size" type="range" min="2" max="4" value="3"></div><button id="shuffle" class="primary">shuffle the picture ↗</button></aside>
+      <section class="panel puzzle-panel"><div class="panel-head"><div><p class="eyebrow">02 — piece it together</p><h2 id="title">Waiting for a picture</h2></div><div class="counter"><b id="placed">0</b> / <span id="total">9</span><small>placed</small></div></div><div class="puzzle-wrap"><div id="puzzle" class="puzzle"></div><div id="win" class="win" hidden>✳ solved!</div></div><div class="puzzle-footer"><span id="puzzleStatus">Open the camera to begin.</span><span>moves <b id="moves">0</b></span></div></section>
+      <aside class="panel strip"><div class="heading"><span>03</span><h2>Your photo strip</h2></div><div class="strip-stage"><canvas id="stripCanvas" width="360" height="640"></canvas><div id="placeholder" class="placeholder">✳<br><small>Solve the puzzle<br>to develop your strip</small></div></div><button id="download" class="secondary" disabled>download strip ↓</button><button id="print" class="link-button" disabled>print the moment</button></aside>
     </section>
-
-    <div id="cameraModal" class="modal" hidden>
-      <div class="modal-card">
-        <button class="close-button" id="closeCamera" type="button" aria-label="Close">×</button>
-        <p class="eyebrow">camera mode</p>
-        <h2>Make a real memory.</h2>
-
-        <div class="camera-frame">
-          <video id="cameraVideo" autoplay muted playsinline></video>
-          <canvas id="handCanvas"></canvas>
-          <div class="countdown" id="countdown" hidden>3</div>
-          <div class="gesture-guide">
-            <span id="gestureIcon">◎</span>
-            <b id="gestureText">Starting camera…</b>
-            <small id="gestureHint">Your browser will ask for camera permission.</small>
-          </div>
-        </div>
-
-        <div class="camera-actions">
-          <button class="primary-button" id="takePhoto" type="button" disabled>capture now <span>◎</span></button>
-          <button class="ghost-button" id="gestureToggle" type="button">gesture capture: on</button>
-        </div>
-
-        <p class="camera-note" id="cameraNote"></p>
-      </div>
-    </div>
-
-    <footer>
-      <span>photopuzzel © 2024</span>
-      <span>nothing leaves this moment</span>
-      <span>made for the little moments</span>
-    </footer>
   </main>
-
-  <script src="https://cdn.jsdelivr.net/npm/@mediapipe/hands/hands.js" crossorigin="anonymous"></script>
+  <div id="modal" class="modal" hidden><div class="modal-card"><button id="close" class="close" aria-label="Close">×</button><p class="eyebrow">camera mode</p><h2>Make a real memory.</h2><div class="camera-box"><video id="video" autoplay muted playsinline></video><div id="cameraMessage" class="camera-message">Press open camera to begin.</div></div><div class="camera-actions"><button id="capture" class="primary" disabled>capture now ◎</button><button id="retry" class="link-button">retry camera</button></div><p id="cameraError" class="error"></p></div></div>
   <script src="script.js"></script>
 </body>
 </html>
